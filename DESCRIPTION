@@ -1,11 +1,65 @@
-Package: sp.scRNAseqAnalysis
-Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Package: sp.scRNAseq
+Title: sp.scRNAseq is a software suite for analysis of scRNAseq data that has
+    been produced using the spatial scRNAseq method
+Version: 0.0.1.1
+Authors@R: c(
+    person("Jason T.", "Serviss", email = "Jason.serviss@ki.se", role = c("aut", "cre"), comment = c(ORCID = 0000-0002-5778-7014)),
+    person("Martin", "Enge", email = "Martin.Enge@ki.se", role = c("aut"))
+    )
+Author: Jason T. Serviss [aut, cre],
+  Martin Enge [aut]
+Maintainer: Jason T Serviss <jason.serviss@ki.se>
+Description: What the package does (one paragraph).
+Depends:
+    R (>= 3.4.2)
+Imports:
+    RColorBrewer,
+    ggplot2,
+    rgl,
+    mclust,
+    Rtsne,
+    ggthemes,
+    igraph,
+    methods,
+    dplyr,
+    reshape2,
+    viridis,
+    printr,
+    pso,
+    ggrepel,
+    tibble,
+    purrr,
+    tidyr,
+    magrittr,
+    stringr,
+    S4Vectors,
+    ggforce,
+    ggraph,
+    readr,
+    rlang
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat,
+    BiocStyle
+VignetteBuilder: knitr
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
+NeedsCompilation: no
+Collate: 
+    'sp.scRNAseq-package.R'
+    'All-classes.R'
+    'debugging.R'
+    'generalFunctions.R'
+    'initialize-methods.R'
+    'show-methods.R'
+    'spCounts.R'
+    'spPlot.R'
+    'spSwarm.R'
+    'spUnsupervised.R'
+    'testCounts.R'
+    'testErcc.R'
+    'testSwa.R'
+    'testUns.R'
+RoxygenNote: 6.0.1

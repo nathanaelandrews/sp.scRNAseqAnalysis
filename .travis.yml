@@ -1,0 +1,15 @@
+#Sample .travis.yml for R projects
+
+language: r
+r: 3.4.2
+package: cache
+bioc_required: true
+r_build_args: "--no-manual --no-resave-data"
+r_check_args: "--no-build-vignettes --no-manual --timings"
+-os:
+  - linux
+  - osx
+before_install:
+  Rscript -e 'update.packages(ask = FALSE)'
+sudo: required
+apt_packages: libudunits2-dev
