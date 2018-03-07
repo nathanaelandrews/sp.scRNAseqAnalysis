@@ -7,9 +7,13 @@ output: html_document
 ```{r, include=FALSE}
 library(sp.scRNAseq)
 library(tidyverse)
-extrafont::loadfonts(device="win")
 
-
+#ideally you would only run this if the operating system is windows
+#there is some info here: https://stackoverflow.com/questions/4747715/how-to-check-the-os-within-r
+#but I can't check it without a windows computer
+#You should be able to write something like:
+#if(Sys.info()['sysname'] == "Windows") {extrafont::loadfonts(device="win")}
+extrafont::loadfonts(device="win") 
 ```
 
 ```{r}
@@ -25,20 +29,22 @@ colnames(counts) <- str_replace(colnames(counts), "(.*)\\.htseq$", "\\1")
 colnames(counts.ercc) <- str_replace(colnames(counts.ercc), "(.*)\\.htseq$", "\\1") 
 
 #Select Singlets
-
 s <- grepl("SRR", colnames(counts)) | grepl("Singlet", colnames(counts)) | grepl("NJA00102", colnames(counts)) | grepl("NJA00103", colnames(counts)) | grepl("NJA00104", colnames(counts)) | grepl("NJA00109", colnames(counts)) | grepl("NJA00204", colnames(counts)) | grepl("NJA00205", colnames(counts)) | grepl("NJA00206", colnames(counts))
 
 #Create Objects with multiplets and Singlets
-
 cObjSng <- spCounts(counts[, s], counts.ercc[, s])
 cObjMul <- spCounts(counts[, !s], counts.ercc[, !s])
 
 #Plot Fraction of ERCC in Multiplets and Singlets (Works poorly due to no ERCC in Regev data)
-
 plotCountsERCC(cObjSng, cObjMul)
 
-# Plot Number of Cells expressing both of selected markers
+#I fixed this now in devel version 0.0.1.5. Samples that have no ERCC reads should have them set to NA instead of 0. Setting them to NA will give a warning when building the spCounts objects but that is ok.
+#counts.ercc[, grepl("SRR", colnames(counts.ercc))] <- NA
+#cObjSng <- spCounts(counts[, s], counts.ercc[, s])
+#cObjMul <- spCounts(counts[, !s], counts.ercc[, !s])
+#plotCountsERCC(cObjSng, cObjMul)
 
+# Plot Number of Cells expressing both of selected markers
 plotCountsMarkers(cObjSng, cObjMul, markers = c("Alpi", "Reg4"))
 
 #Create tSNE and plot with Mlcust clusters as well as gene expression
