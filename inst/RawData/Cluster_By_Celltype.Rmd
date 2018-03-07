@@ -38,17 +38,17 @@ s <- grepl("SRR", colnames(counts)) | grepl("Singlet", colnames(counts)) | grepl
 spCounts
 ```{r}
 #Create Objects with multiplets and Singlets
-cObjSng <- spCounts(counts[, s], counts.ercc[, s])
-cObjMul <- spCounts(counts[, !s], counts.ercc[, !s])
-
-#Plot Fraction of ERCC in Multiplets and Singlets (Works poorly due to no ERCC in Regev data)
-plotCountsERCC(cObjSng, cObjMul)
-
-#I fixed this now in devel version 0.0.1.5. Samples that have no ERCC reads should have them set to NA instead of 0. Setting them to NA will give a warning when building the spCounts objects but that is ok.
-#counts.ercc[, grepl("SRR", colnames(counts.ercc))] <- NA
 #cObjSng <- spCounts(counts[, s], counts.ercc[, s])
 #cObjMul <- spCounts(counts[, !s], counts.ercc[, !s])
+
+#Plot Fraction of ERCC in Multiplets and Singlets (Works poorly due to no ERCC in Regev data)
 #plotCountsERCC(cObjSng, cObjMul)
+
+#I fixed this now in devel version 0.0.1.5. Samples that have no ERCC reads should have them set to NA instead of 0. Setting them to NA will give a warning when building the spCounts objects but that is ok.
+counts.ercc[, grepl("SRR", colnames(counts.ercc))] <- NA
+cObjSng <- spCounts(counts[, s], counts.ercc[, s])
+cObjMul <- spCounts(counts[, !s], counts.ercc[, !s])
+plotCountsERCC(cObjSng, cObjMul)
 
 # Plot Number of Cells expressing both of selected markers
 plotCountsMarkers(cObjSng, cObjMul, markers = c("Alpi", "Reg4"))
