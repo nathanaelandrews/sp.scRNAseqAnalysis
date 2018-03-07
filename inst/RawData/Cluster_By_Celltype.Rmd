@@ -3,47 +3,64 @@ title: "Cluster by Cell Type"
 author: "Nathan"
 date: "February 16, 2018"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 ```{r, include=FALSE}
 library(sp.scRNAseq)
 library(tidyverse)
-extrafont::loadfonts(device="win")
 
-
+#ideally you would only run this if the operating system is windows
+#there is some info here: https://stackoverflow.com/questions/4747715/how-to-check-the-os-within-r
+#but I can't check it without a windows computer
+#You should be able to write something like:
+if(Sys.info()['sysname'] == "Windows") {extrafont::loadfonts(device="win")}
+#extrafont::loadfonts(device="win") 
 ```
 
+Load data
 ```{r}
-
-
-
-load("counts_raw_and_log_180112.rda")
-load("counts_ercc.rda")
+#load("counts_raw_and_log_180112.rda")
+#load("counts_ercc.rda")
+#this is better because it will work for anyone that has your package installed 
+#and therefore is more reproduciable.
+load(system.file('rawData/counts_raw_and_log_180112.rda', package = "sp.scRNAseqAnalysis"))
+load(system.file('rawData/counts_ercc.rda', package = "sp.scRNAseqAnalysis"))
 
 #remove .htseq suffix
 colnames(counts) <- str_replace(colnames(counts), "(.*)\\.htseq$", "\\1")
 colnames(counts.ercc) <- str_replace(colnames(counts.ercc), "(.*)\\.htseq$", "\\1") 
 
 #Select Singlets
-
 s <- grepl("SRR", colnames(counts)) | grepl("Singlet", colnames(counts)) | grepl("NJA00102", colnames(counts)) | grepl("NJA00103", colnames(counts)) | grepl("NJA00104", colnames(counts)) | grepl("NJA00109", colnames(counts)) | grepl("NJA00204", colnames(counts)) | grepl("NJA00205", colnames(counts)) | grepl("NJA00206", colnames(counts))
+```
 
+spCounts
+```{r}
 #Create Objects with multiplets and Singlets
-
-cObjSng <- spCounts(counts[, s], counts.ercc[, s])
-cObjMul <- spCounts(counts[, !s], counts.ercc[, !s])
+#cObjSng <- spCounts(counts[, s], counts.ercc[, s])
+#cObjMul <- spCounts(counts[, !s], counts.ercc[, !s])
 
 #Plot Fraction of ERCC in Multiplets and Singlets (Works poorly due to no ERCC in Regev data)
+#plotCountsERCC(cObjSng, cObjMul)
 
+#I fixed this now in devel version 0.0.1.5. Samples that have no ERCC reads should have them set to NA instead of 0. Setting them to NA will give a warning when building the spCounts objects but that is ok.
+counts.ercc[, grepl("SRR", colnames(counts.ercc))] <- NA
+cObjSng <- spCounts(counts[, s], counts.ercc[, s])
+cObjMul <- spCounts(counts[, !s], counts.ercc[, !s])
 plotCountsERCC(cObjSng, cObjMul)
 
 # Plot Number of Cells expressing both of selected markers
-
 plotCountsMarkers(cObjSng, cObjMul, markers = c("Alpi", "Reg4"))
+```
 
+spUnsupervised
+```{r}
 #Create tSNE and plot with Mlcust clusters as well as gene expression
 
 uObj <- spUnsupervised(cObjSng)
 plotUnsupervisedClass(uObj, cObjSng)
+#even though the seed is set by default I would: plotUnsupervisedClass(uObj, cObjSng, seed = 438923)
 plotUnsupervisedMarkers(uObj, cObjSng, markers = "Lgr5")
 plotUnsupervisedMarkers(uObj, cObjSng, markers = "Olfm4")
 plotUnsupervisedMarkers(uObj, cObjSng, markers = "Alpi")
@@ -54,9 +71,12 @@ plotUnsupervisedMarkers(uObj, cObjSng, markers = "Ptprc")
 plotUnsupervisedMarkers(uObj, cObjSng, markers = "Dclk1")
 plotUnsupervisedMarkers(uObj, cObjSng, markers = "Mboat1")
 plotUnsupervisedMarkers(uObj, cObjSng, markers = "Chga")
+#would be good to write what cell type these markers correspond to
+```
 
+New classification
+```{r}
 #Manually Create New Clusters by deducing cell types based on gene expression in clusters
-
 classification <- getData(uObj, "classification")
 names(classification) <- getData(uObj, "tsne") %>%
   rownames()
@@ -73,29 +93,20 @@ SI.Tuft.Cells <- names(classification)[classification == "H1"]
 SI.Enteroendocrine <- names(classification)[classification == "S1"]
 Colon <- names(classification)[classification == "I1"]
 
-
-
 #tSNE for colon cells
-
 cs <- colnames(counts) %in% Colon
 
 #Colon object
-
 colcObjSng <- spCounts(counts[, cs], counts.ercc[, cs])
 
 #tSNE for Colon cell and expression of markers
-
 C.uObj <- spUnsupervised(colcObjSng)
 plotUnsupervisedClass(C.uObj, colcObjSng)
 plotUnsupervisedMarkers(C.uObj, colcObjSng, markers = c("Lgr5"))
 plotUnsupervisedMarkers(C.uObj, colcObjSng, markers = c("Muc2"))
 plotUnsupervisedMarkers(C.uObj, colcObjSng, markers = c("Car1"))
 
-
-
 #Select and rename clusters according to cell types in colon
-
-
 C.classification <- getData(C.uObj, "classification")
 names(C.classification) <- getData(C.uObj, "tsne") %>%
   rownames()
@@ -105,25 +116,35 @@ C.Goblet <- names(C.classification)[C.classification == "C1"]
 C.Colonocytes <- names(C.classification)[C.classification == "A1"]
 
 #Organize new classifications and insert them into uObj which contains all cells
-
-
 celltypes <- data.frame(
-  Samples = c(SI.Early.Enterocyte, SI.Enterocyte.Progenitor, SI.Enteroendocrine, SI.Goblet, SI.Late.Enterocyte, SI.Paneth, SI.Stem, SI.TA.Cells, C.Colonocytes, C.Goblet, C.Stem, SI.Tuft.Cells, Blood.Cells),
-  class = c(rep("SI.Early.Enterocyte", length(SI.Early.Enterocyte)), rep("SI.Enterocyte.Progenitor", length(SI.Enterocyte.Progenitor)), rep("SI.Enteroendocrine", length(SI.Enteroendocrine)), rep("SI.Goblet", length(SI.Goblet)), rep("SI.Late.Enterocyte", length(SI.Late.Enterocyte)), rep("SI.Paneth", length(SI.Paneth)), rep("SI.Stem", length(SI.Stem)), rep("SI.TA.Cells", length(SI.TA.Cells)), rep("C.Colonocytes", length(C.Colonocytes)), rep("C.Goblet", length(C.Goblet)), rep("C.Stem", length(C.Stem)), rep("SI.Tuft.Cells", length(SI.Tuft.Cells)), rep("Blood.Cells", length(Blood.Cells))) 
+  Samples = c(
+    SI.Early.Enterocyte, SI.Enterocyte.Progenitor, SI.Enteroendocrine, 
+    SI.Goblet, SI.Late.Enterocyte, SI.Paneth, SI.Stem, SI.TA.Cells, 
+    C.Colonocytes, C.Goblet, C.Stem, SI.Tuft.Cells, Blood.Cells
+  ),
+  class = c(
+    rep("SI.Early.Enterocyte", length(SI.Early.Enterocyte)), 
+    rep("SI.Enterocyte.Progenitor", length(SI.Enterocyte.Progenitor)), 
+    rep("SI.Enteroendocrine", length(SI.Enteroendocrine)), 
+    rep("SI.Goblet", length(SI.Goblet)), 
+    rep("SI.Late.Enterocyte", length(SI.Late.Enterocyte)), 
+    rep("SI.Paneth", length(SI.Paneth)), 
+    rep("SI.Stem", length(SI.Stem)), 
+    rep("SI.TA.Cells", length(SI.TA.Cells)), 
+    rep("C.Colonocytes", length(C.Colonocytes)), 
+    rep("C.Goblet", length(C.Goblet)), 
+    rep("C.Stem", length(C.Stem)), 
+    rep("SI.Tuft.Cells", length(SI.Tuft.Cells)), 
+    rep("Blood.Cells", length(Blood.Cells))
+  ) 
 )
 
 newclass <- celltypes[match(rownames(getData(uObj, "tsne")), celltypes$Samples),]
-
 newclass <- as.vector(newclass$class)
 
-devtools::use_data(newclass, overwrite = TRUE)
-
-
-
-```
-
-
-```{r}
+#!!!It would be much better to save the celltypes variable instead of the newclass variable since the sample names are not included in newclass!!!
+#Can you also save the uObj? We may remove it in the future but this might save us some time for now.
+#devtools::use_data(newclass, overwrite = TRUE)
 
 uObj@classification <- newclass
 
@@ -139,7 +160,11 @@ groupMeans(uObj) <- averageGroupExpression(cObjSng, getData(uObj, "classificatio
 #Set Uncertainty to 0 and attempt to identify cell composition of multiplets
 
 uncertainty(uObj) <- rep(0, length(getData(uObj, "uncertainty")))
+```
 
+spSwarm
+I set eval = FALSE in the following "chunk" so that the spSwarm method is not run when knitting. I.e. the code is only there to show what was previously done.
+```{r, eval = FALSE}
 sObj <- spSwarm(cObjMul, uObj, distFun = "dtsnCellNum", e = 0.0025, cellNumbers = estimateCells(cObjSng, cObjMul), swarmsize = 500, maxiter = 1000)
 plotSwarmGraph(sObj, uObj)
 
@@ -151,16 +176,11 @@ fp
 devtools::use_data(sObj, overwrite = TRUE)
 devtools::use_data(fp, overwrite = TRUE)
 
-
-
-
 #sObj <- spSwarm(cObjMul, uObj, distFun = "distToSliceNorm")
 #plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "tsne")
 #plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "heat")
 #tsne <- getData(uObj, "tsne")
 #plot.nice(tsne, gene.vals=counts.log, genes=c("Lyz1", "Alpi", "Lgr5", "Reg4", "Dll4"), cex=2)
-
-
 ```
 
 ```{r}
