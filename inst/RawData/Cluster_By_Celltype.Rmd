@@ -143,6 +143,7 @@ newclass <- celltypes[match(rownames(getData(uObj, "tsne")), celltypes$Samples),
 newclass <- as.vector(newclass$class)
 
 #!!!It would be much better to save the celltypes variable instead of the newclass variable since the sample names are not included in newclass!!!
+#Can you also save the uObj? We may remove it in the future but this might save us some time for now.
 #devtools::use_data(newclass, overwrite = TRUE)
 
 uObj@classification <- newclass
