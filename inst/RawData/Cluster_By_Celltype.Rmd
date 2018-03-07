@@ -13,11 +13,12 @@ extrafont::loadfonts(device="win")
 ```
 
 ```{r}
-
-
-
-load("counts_raw_and_log_180112.rda")
-load("counts_ercc.rda")
+#load("counts_raw_and_log_180112.rda")
+#load("counts_ercc.rda")
+#this is better because it will work for anyone that has your package installed 
+#and therefore is more reproduciable.
+load(system.file('rawData/counts_raw_and_log_180112.rda', package = "sp.scRNAseqAnalysis"))
+load(system.file('rawData/counts_ercc.rda', package = "sp.scRNAseqAnalysis"))
 
 #remove .htseq suffix
 colnames(counts) <- str_replace(colnames(counts), "(.*)\\.htseq$", "\\1")
