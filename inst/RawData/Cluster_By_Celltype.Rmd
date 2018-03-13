@@ -162,6 +162,8 @@ groupMeans(uObj) <- averageGroupExpression(cObjSng, getData(uObj, "classificatio
 #Set Uncertainty to 0 and attempt to identify cell composition of multiplets
 
 uncertainty(uObj) <- rep(0, length(getData(uObj, "uncertainty")))
+uObj_countsMgfpRegev <- uObj
+devtools::use_data(uObj_countsMgfpRegev, overwrite = TRUE)
 ```
 
 spSwarm
@@ -175,7 +177,8 @@ plotSwarmGraph(sObj, uObj)
 fp <- getMultipletsForEdge(sObj, edges = data.frame(to = "C.Stem", from = "SI.Stem"), edge.cutoff = 0)
 fp
 
-devtools::use_data(sObj, overwrite = TRUE)
+sObj_countsMgfpRegev <- sObj
+devtools::use_data(sObj_countsMgfpRegev, overwrite = TRUE)
 devtools::use_data(fp, overwrite = TRUE)
 
 #sObj <- spSwarm(cObjMul, uObj, distFun = "distToSliceNorm")
